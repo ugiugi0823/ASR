@@ -1,15 +1,15 @@
 # Baseline code
-- `main.py': Main file
-- `modules'
-  - `audio': Audio module (parsing)
-  - `data.py': Data loader
+- `main.py`: Main file
+- `modules`
+  - `audio`: Audio module (parsing)
+  - `data.py`: Data loader
   - `inference.py`: Inference
-  - `metrics.py' : Metrics related to evaluation (CER)
-  - `model.py': Model building (DeepSpeech2)
-  - `preprocess.py': Preprocessing (label/transcripts creation)
-  - `trainer.py': Training related
-  - `utils.py' : Miscellaneous settings and necessary functions
-  - `vocab.py' : Vocabulary Class file
+  - `metrics.py` : Metrics related to evaluation (CER)
+  - `model.py`: Model building (DeepSpeech2)
+  - `preprocess.py`: Preprocessing (label/transcripts creation)
+  - `trainer.py`: Training related
+  - `utils.py` : Miscellaneous settings and necessary functions
+  - `vocab.py` : Vocabulary Class file
 
 
 # Driver & CUDA version
