@@ -34,10 +34,10 @@ glob2==0.7
 1. Prepare the dataset.
   -  You can download korean speech datasets from AI-hub (https://www.aihub.or.kr/). After downloading the dataset and unzip the downloaded file.
   - Link to an example dataset: https://www.aihub.or.kr/aihubdata/data/view.do?currMenu=&topMenu=&aihubDataSe=data&dataSetSn=100  
-2. Generate the `transcripts.txt' file (run `make-transcripts.py')
-3. Generate the `labels.csv' file based on the data you have prepared (run `make-labels.py')
-4. Generate the `transcipts-final.txt' file in the format provided as an example transcripts-final.txt file (run `make-transcripts-final.py')
-5. Check the sampling rate of the audio files, adjust parameters, and then run `main.py'
+2. Generate the `transcripts.txt` file (run `make-transcripts.py`)
+3. Generate the `labels.csv` file based on the data you have prepared (run `make-labels.py`)
+4. Generate the `transcipts-final.txt` file in the format provided as an example transcripts-final.txt file (run `make-transcripts-final.py`)
+5. Check the sampling rate of the audio files, adjust parameters, and then run `main.py`
 
 
 # Code reference
