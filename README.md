@@ -17,17 +17,39 @@ NVIDIA-SMI 535.129.03, Driver Version: 535.129.03, CUDA Version: 12.2
 
 
 # Install requires
-astropy==5.1
-torch==2.1.0
-torchaudio==2.1.0
-librosa==0.10.1
-numpy==1.24.3
-pandas==2.0.3
-tqdm==4.65.0
-matplotlib==3.7.2
-scikit-learn==1.3.0
-pydub==0.25.1
-glob2==0.7
+```
+pip install astropy==5.1
+```
+```
+pip install torch==2.1.0
+```
+```
+pip install torchaudio==2.1.0
+```
+```
+pip install librosa==0.10.1
+```
+```
+pip install numpy==1.24.3
+```
+```
+pip install pandas==2.0.3
+```
+```
+pip install tqdm==4.65.0
+```
+```
+pip install matplotlib==3.7.2
+```
+```
+pip install scikit-learn==1.3.0
+```
+```
+pip install pydub==0.25.1
+```
+```
+pip install glob2==0.7
+```
 
 
 # How to train with main.py
