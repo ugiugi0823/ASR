@@ -7,6 +7,7 @@ import time
 import json
 import argparse
 from glob import glob
+import torch.nn as nn
 
 from modules.preprocess import preprocessing
 from modules.trainer import trainer
@@ -15,12 +16,12 @@ from modules.utils import (
     get_criterion,
     get_lr_scheduler,
 )
-from modules.audio import (
-    FilterBankConfig,
-    MelSpectrogramConfig,
-    MfccConfig,
-    SpectrogramConfig,
-)
+# from modules.audio import (
+#     FilterBankConfig,
+#     MelSpectrogramConfig,
+#     MfccConfig,
+#     SpectrogramConfig,
+# )
 from modules.model import build_model
 from modules.vocab import KoreanSpeechVocabulary
 from modules.data import split_dataset, collate_fn
@@ -47,16 +48,23 @@ def load_model(model, optimizer, path):
     print('Model loaded')
 
 def infer_model(model, path):
+    state = torch.load(os.path.join("/vcl3/mahogany/ASR/ASR/checkpoint_epoch_23.pth"))
+    model.load_state_dict(state['model'])
+    
+    print('Model loaded')
     model.eval()
     results = []
     for i in glob(os.path.join(path, '*')):
+        print(i)
         results.append(
             {
                 'filename': i.split('/')[-1],
                 'text': single_infer(model, i)[0]
             }
         )
+    print("inffer 종료")
     return sorted(results, key=lambda x: x['filename'])
+
 
 def main(config):
 
@@ -69,25 +77,30 @@ def main(config):
     if hasattr(config, "num_threads") and int(config.num_threads) > 0:
         torch.set_num_threads(config.num_threads)
     # labels path
-    vocab = KoreanSpeechVocabulary('/your_model_baseline_path_here/labels.csv', output_unit='character')
+    vocab = KoreanSpeechVocabulary('/vcl3/mahogany/ASR/ASR/labels.csv', output_unit='character')
     #print(vocab)
 
     print(device)
     model = build_model(config, vocab, device)
+    if torch.cuda.device_count() > 1:
+        print(f"사용 가능한 GPU 수: {torch.cuda.device_count()}")
+        model = nn.DataParallel(model)
     model = model.to(device)
-    print(model)
+    # print(model)
 
     optimizer = get_optimizer(model, config)
     print(optimizer)
     metric = get_metric(metric_name='CER', vocab=vocab)
-
+    min_valid_loss = float('inf')
+    no_improvement_count = 0
+    early_stop_count = 10  # 10번 동안 개선되지 않으면 조기 종료
     if config.mode == 'train':
         # dataset path
-        DATASET_PATH = "/your_dataset_path_here/"  # replace with the actual dataset path
+        DATASET_PATH = ""  # replace with the actual dataset path
         config.dataset_path = DATASET_PATH
         label_path = os.path.join(DATASET_PATH, 'train', 'train_label')
         # transcripts file path
-        train_dataset, valid_dataset = split_dataset(config, '/your_model_baseline_path_here/transcripts-final.txt', vocab)
+        train_dataset, valid_dataset = split_dataset(config, '/vcl3/mahogany/ASR/ASR/transcripts-final.txt', vocab)
 
         lr_scheduler = get_lr_scheduler(config, optimizer, len(train_dataset))
         optimizer = Optimizer(optimizer, lr_scheduler, int(len(train_dataset)*config.num_epochs), config.max_grad_norm)
@@ -143,9 +156,30 @@ def main(config):
                 train_begin_time,
                 device
             )
+             # 검증 손실이 최소값을 갱신했는지 확인
+            if valid_loss < min_valid_loss:
+                min_valid_loss = valid_loss
+                checkpoint_2 = { 
+                    'epoch': epoch,
+                    'model': model.state_dict()
+                }
+                # 모델 저장
+                torch.save(checkpoint_2, f'/vcl3/mahogany/ASR/ASR/models/1219/checkpoint_epoch_{epoch}.pth')
+                
+                print(f"Epoch {epoch}: 검증 손실 감소 ({min_valid_loss:.6f} --> {valid_loss:.6f}). 모델 저장됨.")
+
+            else:
+                no_improvement_count += 1
+                print(f"Epoch {epoch}: 검증 손실 개선 없음. 연속 {no_improvement_count}번째.")
+
+            # 조기 종료 조건 확인
+            if no_improvement_count >= early_stop_count:
+                print(f"검증 손실이 {early_stop_count}번 연속으로 개선되지 않아 조기 종료합니다.")
+                break
+            
 
             print('[INFO] Epoch %d (Validation) Loss %0.4f  CER %0.4f' % (epoch, valid_loss, valid_cer))
-
+            
             print(f'[INFO] epoch {epoch} is done')
             
             
@@ -163,10 +197,11 @@ def main(config):
         save_model(model, optimizer, "/yout_model_save_path_here/")  # replace with the desired path
         print("model saved")
     elif config.mode == 'load':
-        load_model(model, optimizer, "your_model_load_path_here")  # replace with the desired path
+        load_model(model, optimizer, "/vcl3/mahogany/ASR/ASR/checkpoint_epoch_94.pth")  # replace with the desired path
         print("model loaded")
     elif config.mode == 'infer':
-        results = infer_model(model, "your_inference_data_path_here")  # replace with the desired path
+        results = infer_model(model, "/vcl3/mahogany/ASR/new/wav/KtelSpeech_train_D60_wav_0/J91/S00007727")  # replace with the desired path
+        print("👑"*30)
         print(results)
 
 if __name__ == '__main__':
@@ -183,7 +218,7 @@ if __name__ == '__main__':
     args.add_argument('--use_cuda', type=bool, default=True)
     args.add_argument('--seed', type=int, default=777)
     args.add_argument('--num_epochs', type=int, default=95)
-    args.add_argument('--batch_size', type=int, default=1)
+    args.add_argument('--batch_size', type=int, default=42)
     args.add_argument('--save_result_every', type=int, default=10)
     args.add_argument('--checkpoint_every', type=int, default=1)
     args.add_argument('--print_every', type=int, default=50)
